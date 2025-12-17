@@ -1,0 +1,11 @@
+# Minimal requirements for Render deployment (no compilation needed)
+flask==3.0.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+faker==21.0.0
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
+# Note: pandas, matplotlib, numpy removed for deployment
+# They're only needed for diagram generation (already done locally)
+# The core app works perfectly without them!
