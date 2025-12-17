@@ -4,12 +4,22 @@ Flask Web Application for Provider Validation Dashboard
 from flask import Flask, render_template, jsonify, request
 import json
 import os
-from orchestrator import ProviderValidationOrchestrator, run_validation_demo
+
+# Try to import orchestrator (only needed for local "Run Validation" feature)
+try:
+    from orchestrator import ProviderValidationOrchestrator, run_validation_demo
+    ORCHESTRATOR_AVAILABLE = True
+except ImportError:
+    # Deployment mode - orchestrator not available (needs pandas/numpy)
+    # App will work purely from pre-generated data files
+    ORCHESTRATOR_AVAILABLE = False
+    print("⚠️  Running in deployment mode - validation features disabled")
+    print("✅ Dashboard will display pre-generated results from data/validation_results.json")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
 
-# Global orchestrator instance
+# Global orchestrator instance (None in deployment mode)
 orchestrator = None
 
 @app.route('/')
@@ -21,6 +31,12 @@ def index():
 def run_validation():
     """API endpoint to trigger validation"""
     global orchestrator
+
+    if not ORCHESTRATOR_AVAILABLE:
+        return jsonify({
+            "status": "info",
+            "message": "Validation feature disabled in deployment mode. Displaying pre-generated results."
+        })
 
     data = request.get_json()
     num_providers = data.get('num_providers', 200)
@@ -50,14 +66,30 @@ def get_dashboard_data():
             with open('data/validation_results.json', 'r') as f:
                 saved_data = json.load(f)
 
-                # If saved data has the full structure, return it
-                if 'processing_stats' in saved_data and 'results' in saved_data:
-                    # Generate dashboard from saved results
-                    from agents.directory_management_agent import DirectoryManagementAgent
-                    directory_agent = DirectoryManagementAgent()
-                    reports = [result["report"] for result in saved_data['results']]
-                    dashboard_data = directory_agent.generate_dashboard_data(reports)
-                    dashboard_data["processing_stats"] = saved_data.get('processing_stats', {})
+                # If saved data has the full structure, calculate summary stats
+                if 'results' in saved_data:
+                    results = saved_data['results']
+
+                    # Calculate summary statistics
+                    total_providers = len(results)
+                    providers_needing_review = sum(1 for r in results if r.get('quality', {}).get('requires_manual_review', False))
+                    avg_quality = sum(r.get('quality', {}).get('quality_score', 0) for r in results) / total_providers if total_providers > 0 else 0
+                    avg_confidence = sum(r.get('validation', {}).get('overall_confidence', 0) for r in results) / total_providers if total_providers > 0 else 0
+
+                    dashboard_data = {
+                        "summary": {
+                            "total_providers_validated": total_providers,
+                            "providers_needing_review": providers_needing_review,
+                            "average_quality_score": round(avg_quality, 1),
+                            "average_confidence_score": round(avg_confidence, 1)
+                        },
+                        "processing_stats": saved_data.get('processing_stats', {
+                            "total_providers": total_providers,
+                            "providers_processed": total_providers,
+                            "providers_validated": total_providers,
+                            "providers_needing_review": providers_needing_review
+                        })
+                    }
                     return jsonify(dashboard_data)
 
                 return jsonify(saved_data)
@@ -160,10 +192,25 @@ def get_review_queue():
             with open('data/validation_results.json', 'r') as f:
                 saved_data = json.load(f)
                 if 'results' in saved_data:
-                    from agents.directory_management_agent import DirectoryManagementAgent
-                    directory_agent = DirectoryManagementAgent()
-                    reports = [result["report"] for result in saved_data['results']]
-                    queue = directory_agent.create_manual_review_queue(reports)
+                    # Build review queue from saved results
+                    queue = []
+                    for result in saved_data['results']:
+                        report = result.get('report', {})
+                        if result.get('quality', {}).get('requires_manual_review', False):
+                            queue.append({
+                                "provider_id": result.get('provider', {}).get('provider_id', ''),
+                                "provider_name": f"{result.get('provider', {}).get('first_name', '')} {result.get('provider', {}).get('last_name', '')}",
+                                "priority": report.get('priority', 'medium'),
+                                "status": report.get('overall_status', 'Unknown'),
+                                "quality_score": result.get('quality', {}).get('quality_score', 0),
+                                "issues_count": len(result.get('validation', {}).get('issues_found', [])),
+                                "red_flags_count": len(result.get('quality', {}).get('red_flags', [])),
+                                "recommended_actions": report.get('recommended_actions', [])
+                            })
+
+                    # Sort by priority
+                    priority_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
+                    queue.sort(key=lambda x: priority_order.get(x['priority'], 999))
                     return jsonify(queue)
         except (FileNotFoundError, KeyError, json.JSONDecodeError):
             pass
