@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Validation Dashboard - EY Hackathon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #718096;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            color: #2d3748;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #a0aec0;
+            font-size: 0.9em;
+        }
+
+        .stat-card.good { border-left: 5px solid #48bb78; }
+        .stat-card.warning { border-left: 5px solid #ed8936; }
+        .stat-card.danger { border-left: 5px solid #f56565; }
+        .stat-card.info { border-left: 5px solid #4299e1; }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #2d3748;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-excellent { background: #c6f6d5; color: #22543d; }
+        .status-good { background: #bee3f8; color: #2c5282; }
+        .status-fair { background: #fefcbf; color: #744210; }
+        .status-poor { background: #fed7d7; color: #742a2a; }
+        .status-critical { background: #fc8181; color: #742a2a; }
+
+        .priority-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .priority-critical { background: #fc8181; color: white; }
+        .priority-high { background: #f6ad55; color: white; }
+        .priority-medium { background: #f6e05e; color: #744210; }
+        .priority-low { background: #e2e8f0; color: #2d3748; }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .chart-container {
+            margin-top: 20px;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bar-label {
+            min-width: 100px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .bar {
+            flex: 1;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: width 1s;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Healthcare Provider Directory Validation System</h1>
+            <p>Agentic AI Solution for Automated Provider Data Management</p>
+            <span class="badge">EY Hackathon 2024</span>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn" onclick="runValidation()" id="validateBtn">
+                Start Validation Process
+            </button>
+            <button class="btn" onclick="refreshDashboard()" id="refreshBtn">
+                Refresh Dashboard
+            </button>
+            <span id="statusMessage" style="margin-left: 20px; color: #718096;"></span>
+        </div>
+
+        <div id="statsContainer" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card info">
+                    <h3>Total Providers</h3>
+                    <div class="value" id="totalProviders">0</div>
+                    <div class="label">Validated</div>
+                </div>
+
+                <div class="stat-card good">
+                    <h3>Average Quality Score</h3>
+                    <div class="value" id="avgQuality">0</div>
+                    <div class="label">Out of 100</div>
+                </div>
+
+                <div class="stat-card info">
+                    <h3>Processing Speed</h3>
+                    <div class="value" id="throughput">0</div>
+                    <div class="label">Providers/Minute</div>
+                </div>
+
+                <div class="stat-card warning">
+                    <h3>Needs Review</h3>
+                    <div class="value" id="needsReview">0</div>
+                    <div class="label">Manual Review Required</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="card">
+                    <h2>Provider Validation Results</h2>
+                    <div class="table-container">
+                        <table id="providersTable">
+                            <thead>
+                                <tr>
+                                    <th>Provider ID</th>
+                                    <th>Name</th>
+                                    <th>Specialty</th>
+                                    <th>Status</th>
+                                    <th>Quality</th>
+                                    <th>Priority</th>
+                                    <th>Issues</th>
+                                </tr>
+                            </thead>
+                            <tbody id="providersBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card" style="margin-bottom: 20px;">
+                        <h2>Status Distribution</h2>
+                        <div class="chart-container">
+                            <div class="bar-chart" id="statusChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Top Issues Found</h2>
+                        <div class="chart-container">
+                            <div class="bar-chart" id="issuesChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Manual Review Queue (Priority Order)</h2>
+                <div class="table-container">
+                    <table id="reviewQueueTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Provider</th>
+                                <th>Priority</th>
+                                <th>Quality Score</th>
+                                <th>Issues</th>
+                                <th>Actions Required</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewQueueBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingContainer" class="card loading" style="display: none;">
+            <div class="spinner"></div>
+            <h3>Processing Provider Validation...</h3>
+            <p>This may take a few moments</p>
+        </div>
+    </div>
+
+    <script>
+        async function runValidation() {
+            const btn = document.getElementById('validateBtn');
+            const statusMsg = document.getElementById('statusMessage');
+            const loadingContainer = document.getElementById('loadingContainer');
+            const statsContainer = document.getElementById('statsContainer');
+
+            btn.disabled = true;
+            statusMsg.textContent = 'Starting validation...';
+            loadingContainer.style.display = 'block';
+            statsContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ num_providers: 200 })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    statusMsg.textContent = data.message;
+                    statusMsg.style.color = '#48bb78';
+                    await refreshDashboard();
+                } else {
+                    statusMsg.textContent = 'Error: ' + data.message;
+                    statusMsg.style.color = '#f56565';
+                }
+            } catch (error) {
+                statusMsg.textContent = 'Error: ' + error.message;
+                statusMsg.style.color = '#f56565';
+            } finally {
+                btn.disabled = false;
+                loadingContainer.style.display = 'none';
+            }
+        }
+
+        async function refreshDashboard() {
+            const statsContainer = document.getElementById('statsContainer');
+            const loadingContainer = document.getElementById('loadingContainer');
+
+            loadingContainer.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/dashboard');
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
+
+                updateStats(data);
+                await updateProvidersTable();
+                updateCharts(data);
+                await updateReviewQueue();
+
+                statsContainer.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching dashboard:', error);
+            } finally {
+                loadingContainer.style.display = 'none';
+            }
+        }
+
+        function updateStats(data) {
+            const stats = data.processing_stats || {};
+            const summary = data.summary || {};
+
+            document.getElementById('totalProviders').textContent = stats.providers_processed || 0;
+            document.getElementById('avgQuality').textContent = (summary.average_quality_score || 0).toFixed(1);
+            document.getElementById('throughput').textContent = (stats.providers_per_minute || 0).toFixed(0);
+            document.getElementById('needsReview').textContent = summary.providers_needing_review || 0;
+        }
+
+        async function updateProvidersTable() {
+            try {
+                const response = await fetch('/api/providers');
+                const providers = await response.json();
+
+                const tbody = document.getElementById('providersBody');
+                tbody.innerHTML = '';
+
+                providers.forEach(provider => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${provider.provider_id}</td>
+                        <td>${provider.name}</td>
+                        <td>${provider.specialty}</td>
+                        <td><span class="status-badge status-${provider.status.toLowerCase()}">${provider.status}</span></td>
+                        <td>${provider.quality_score.toFixed(1)}</td>
+                        <td><span class="priority-badge priority-${provider.priority.toLowerCase()}">${provider.priority}</span></td>
+                        <td>${provider.issues}</td>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error updating providers table:', error);
+            }
+        }
+
+        function updateCharts(data) {
+            // Status distribution chart
+            const statusChart = document.getElementById('statusChart');
+            statusChart.innerHTML = '';
+
+            const statusDist = data.summary.status_distribution || {};
+            const total = Object.values(statusDist).reduce((a, b) => a + b, 0);
+
+            Object.entries(statusDist).forEach(([status, count]) => {
+                const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
+                statusChart.innerHTML += `
+                    <div class="bar-item">
+                        <div class="bar-label">${status}</div>
+                        <div class="bar">
+                            <div class="bar-fill" style="width: ${percentage}%">${count}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Top issues chart
+            const issuesChart = document.getElementById('issuesChart');
+            issuesChart.innerHTML = '';
+
+            const topIssues = data.top_issues || [];
+            const maxIssues = topIssues.length > 0 ? topIssues[0][1] : 1;
+
+            topIssues.slice(0, 5).forEach(([issue, count]) => {
+                const percentage = (count / maxIssues * 100).toFixed(1);
+                issuesChart.innerHTML += `
+                    <div class="bar-item">
+                        <div class="bar-label" style="min-width: 150px; font-size: 0.85em;">${issue.substring(0, 20)}...</div>
+                        <div class="bar">
+                            <div class="bar-fill" style="width: ${percentage}%">${count}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function updateReviewQueue() {
+            try {
+                const response = await fetch('/api/review-queue');
+                const queue = await response.json();
+
+                const tbody = document.getElementById('reviewQueueBody');
+                tbody.innerHTML = '';
+
+                queue.slice(0, 20).forEach(item => {
+                    const row = tbody.insertRow();
+                    const actions = item.recommended_actions.join(', ');
+                    row.innerHTML = `
+                        <td>${item.queue_position}</td>
+                        <td>${item.provider_name}</td>
+                        <td><span class="priority-badge priority-${item.priority.toLowerCase()}">${item.priority}</span></td>
+                        <td>${item.quality_metrics.quality_score.toFixed(1)}</td>
+                        <td>${item.issues_found.length}</td>
+                        <td style="font-size: 0.85em;">${actions.substring(0, 80)}...</td>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error updating review queue:', error);
+            }
+        }
+
+        // Auto-load dashboard on page load if data exists
+        window.onload = async function() {
+            try {
+                const response = await fetch('/api/dashboard');
+                if (response.ok) {
+                    await refreshDashboard();
+                }
+            } catch (error) {
+                console.log('No existing data, please run validation');
+            }
+        };
+    </script>
+</body>
+</html>
