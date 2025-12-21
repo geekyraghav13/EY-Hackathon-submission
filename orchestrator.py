@@ -11,6 +11,9 @@ from agents.data_validation_agent import DataValidationAgent
 from agents.information_enrichment_agent import InformationEnrichmentAgent
 from agents.quality_assurance_agent import QualityAssuranceAgent
 from agents.directory_management_agent import DirectoryManagementAgent
+from agents.trend_analysis_agent import TrendAnalysisAgent
+from agents.notification_agent import NotificationAgent
+from agents.duplicate_detection_agent import DuplicateDetectionAgent
 
 class ProviderValidationOrchestrator:
     def __init__(self):
@@ -18,6 +21,10 @@ class ProviderValidationOrchestrator:
         self.enrichment_agent = InformationEnrichmentAgent()
         self.qa_agent = QualityAssuranceAgent()
         self.directory_agent = DirectoryManagementAgent()
+        # New agents
+        self.trend_agent = TrendAnalysisAgent()
+        self.notification_agent = NotificationAgent()
+        self.duplicate_agent = DuplicateDetectionAgent()
 
         self.validation_results = []
         self.processing_stats = {
@@ -174,6 +181,85 @@ class ProviderValidationOrchestrator:
             provider_result["provider"],
             provider_result["report"]
         )
+    
+    def get_trend_analysis(self) -> Dict[str, Any]:
+        """Get trend analysis from the trend agent"""
+        if not self.validation_results:
+            return {"error": "No validation results available"}
+        return self.trend_agent.generate_trend_report(self.validation_results)
+    
+    def get_geographic_analysis(self) -> Dict[str, Any]:
+        """Get geographic pattern analysis"""
+        if not self.validation_results:
+            return {"error": "No validation results available"}
+        return self.trend_agent.analyze_geographic_patterns(self.validation_results)
+    
+    def get_specialty_trends(self) -> Dict[str, Any]:
+        """Get specialty-based trend analysis"""
+        if not self.validation_results:
+            return {"error": "No validation results available"}
+        return self.trend_agent.detect_specialty_trends(self.validation_results)
+    
+    def get_notification_queue(self) -> List[Dict]:
+        """Get prioritized notification queue"""
+        if not self.validation_results:
+            return []
+        return self.notification_agent.prioritize_notifications(self.validation_results)
+    
+    def generate_provider_notification(self, provider_id: str) -> Dict[str, Any]:
+        """Generate notification email for a specific provider"""
+        provider_result = next(
+            (r for r in self.validation_results if r["provider"]["provider_id"] == provider_id),
+            None
+        )
+        
+        if not provider_result:
+            return {"error": "Provider not found"}
+        
+        provider = provider_result["provider"]
+        report = provider_result["report"]
+        
+        email = self.notification_agent.generate_provider_email(
+            provider,
+            provider.get("issues_found", []),
+            report.get("priority", "medium")
+        )
+        
+        update_request = self.notification_agent.create_update_request(provider_result)
+        
+        return {
+            "email": email,
+            "update_request": update_request
+        }
+    
+    def find_duplicates(self, providers: List[Dict] = None) -> Dict[str, Any]:
+        """Find potential duplicate providers"""
+        if providers is None:
+            providers = [r["provider"] for r in self.validation_results]
+        
+        if not providers:
+            return {"error": "No providers available"}
+        
+        return self.duplicate_agent.generate_deduplication_report(providers)
+    
+    def get_analytics_summary(self) -> Dict[str, Any]:
+        """Get comprehensive analytics summary"""
+        if not self.validation_results:
+            return {"error": "No validation results available"}
+        
+        providers = [r["provider"] for r in self.validation_results]
+        
+        return {
+            "trends": self.get_trend_analysis(),
+            "geographic": self.get_geographic_analysis(),
+            "specialty": self.get_specialty_trends(),
+            "duplicates_summary": {
+                "potential_duplicates": len(self.duplicate_agent.find_potential_duplicates(providers[:50])),
+                "note": "Limited to first 50 providers for performance"
+            },
+            "notification_queue_size": len(self.get_notification_queue()),
+            "generated_at": datetime.now().isoformat()
+        }
 
 def run_validation_demo(num_providers: int = 200):
     """Run complete validation demonstration"""

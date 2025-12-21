@@ -1,0 +1,16 @@
+first_name,last_name,npi,specialty,phone,email,address,city,state,zip_code,license_number,license_status,license_expiry,board_certified,years_experience,accepting_new_patients
+John,Smith,1234567890,Family Medicine,555-123-4567,john.smith@clinic.com,123 Main Street,New York,NY,10001,NY123456,Active,2026-12-31,true,15,true
+Sarah,Johnson,2345678901,Cardiology,555-234-5678,sarah.j@heart.com,456 Oak Avenue,Los Angeles,CA,90001,CA234567,Active,2027-06-15,true,20,true
+Michael,Brown,3456789012,Internal Medicine,555-345-6789,m.brown@medical.org,789 Elm Road,Chicago,IL,60601,IL345678,Active,2026-09-30,true,12,false
+Emily,Davis,4567890123,Pediatrics,555-456-7890,emily.d@kids.com,321 Pine Lane,Houston,TX,77001,TX456789,Active,2027-03-20,true,8,true
+Robert,Wilson,5678901234,Orthopedic Surgery,555-567-8901,r.wilson@ortho.net,654 Cedar Drive,Phoenix,AZ,85001,AZ567890,Active,2026-11-15,true,25,false
+Jennifer,Martinez,6789012345,Dermatology,555-678-9012,j.martinez@skin.com,987 Maple Court,Philadelphia,PA,19101,PA678901,Active,2027-08-01,true,10,true
+David,Anderson,7890123456,Neurology,555-789-0123,d.anderson@neuro.org,147 Birch Street,San Antonio,TX,78201,TX789012,Active,2026-05-25,true,18,true
+Lisa,Thomas,8901234567,Psychiatry,555-890-1234,l.thomas@mental.com,258 Willow Way,San Diego,CA,92101,CA890123,Active,2027-01-10,true,14,true
+James,Jackson,9012345678,Oncology,555-901-2345,j.jackson@cancer.net,369 Spruce Avenue,Dallas,TX,75201,TX901234,Active,2026-08-20,true,22,false
+Amanda,White,0123456789,Endocrinology,555-012-3456,a.white@endo.com,741 Ash Boulevard,San Jose,CA,95101,CA012345,Active,2027-04-30,true,11,true
+Christopher,Harris,1122334455,Gastroenterology,555-112-2334,c.harris@gastro.org,852 Poplar Place,Austin,TX,78701,TX112233,Active,2026-10-15,true,16,true
+Jessica,Martin,2233445566,Rheumatology,555-223-3445,j.martin@rheum.com,963 Oak Street,Jacksonville,FL,32201,FL223344,Active,2027-07-25,true,9,false
+Daniel,Garcia,3344556677,Pulmonology,555-334-4556,d.garcia@lung.net,174 Pine Road,Fort Worth,TX,76101,TX334455,Active,2026-12-05,true,13,true
+Michelle,Robinson,4455667788,Nephrology,555-445-5667,m.robinson@kidney.com,285 Elm Avenue,Columbus,OH,43201,OH445566,Active,2027-02-28,true,17,true
+Kevin,Clark,5566778899,Urology,555-556-6778,k.clark@uro.org,396 Cedar Lane,Charlotte,NC,28201,NC556677,Active,2026-06-10,true,21,false

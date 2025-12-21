@@ -13,6 +13,8 @@ matplotlib==3.8.2
 numpy==1.26.4
 pillow==10.1.0
 gunicorn==21.2.0
+openpyxl>=3.1.0
 
 # To use locally: pip install -r requirements-local.txt
 # For deployment: Render uses requirements.txt (minimal version)
+
